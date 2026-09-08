@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sovereign Bank - DevOps Panel</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background-color: #f8f9fa; color: #333; }
+        .container { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .full-width { grid-column: 1 / -1; }
+        h1, h2 { margin-top: 0; color: #1a202c; }
+        
+        /* Painel de Saldo */
+        .saldo-box { font-size: 32px; font-weight: bold; margin: 15px 0; padding: 15px; border-radius: 8px; text-align: center; background: #e2e8f0; }
+        .saldo-positivo { color: #2f855a; background: #c6f6d5; }
+        .saldo-negativo { color: #9b2c2c; background: #fed7d7; }
+
+        /* Formulário */
+        label { display: block; margin-bottom: 5px; font-weight: 600; }
+        input, select, button { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #cbd5e0; border-radius: 6px; box-sizing: border-box; font-size: 16px; }
+        button { background: #3182ce; color: white; border: none; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #2b6cb0; }
+
+        /* Tabela de Extrato */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #edf2f7; font-weight: 600; }
+        .tipo-deposito { color: #2f855a; font-weight: bold; }
+        .tipo-saque { color: #e53e3e; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h1 style="text-align: center; margin-bottom: 30px;">🏦 Sovereign Bank <span style="font-size: 16px; color: #718096;">| DevOps Project 1</span></h1>
+
+    <div class="container">
+        
+        <!-- Bloco 1: Resumo da Conta -->
+        <div class="card">
+            <h2>Resumo da Conta</h2>
+            <p>Saldo Geral Consolidado:</p>
+            <div id="saldoAtual" class="saldo-box">R$ 0,00</div>
+        </div>
+
+        <!-- Bloco 2: Nova Transação -->
+        <div class="card">
+            <h2>Nova Operação</h2>
+            <form id="formTransacao">
+                <label for="cliente">Nome do Cliente</label>
+                <input type="text" id="cliente" placeholder="Ex: Samuel" required>
+
+                <label for="tipo">Tipo de Operação</label>
+                <select id="tipo" required>
+                    <option value="DEPÓSITO">Depósito (+)</option>
+                    <option value="SAQUE">Saque (-)</option>
+                </select>
+
+                <label for="valor">Valor (R$)</label>
+                <input type="number" id="valor" step="0.01" min="0.01" placeholder="0,00" required>
+
+                <button type="submit">Confirmar Transação</button>
+            </form>
+        </div>
+
+        <!-- Bloco 3: Extrato (Ocupa a largura toda) -->
+        <div class="card full-width">
+            <h2>Extrato Bancário Global (MongoDB)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Cliente</th>
+                        <th>Operação</th>
+                        <th>Valor</th>
+                    </tr>
+                </thead>
+                <tbody id="listaExtrato">
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: #718096;">Carregando histórico...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        
+        // DETECÇÃO AUTOMÁTICA DE AMBIENTE (PRODUÇÃO VS LOCAL)
+      const API_URL = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1" || window.location.protocol === "file:"
+    ? "http://localhost:3000" 
+    : "https://projeto2-monorepo.onrender.com"; // 👈 Cole a URL do seu novo Render aqui
+
+        const form = document.getElementById('formTransacao');
+        const saldoElemento = document.getElementById('saldoAtual');
+        const extratoCorpo = document.getElementById('listaExtrato');
+
+        // Função para buscar os dados do MongoDB e atualizar a tela
+        async function carregarDadosBancarios() {
+            try {
+                const resposta = await fetch(`${API_URL}/api/extrato`);
+                const dados = await resposta.json();
+
+                // 1. Atualiza o saldo e a cor do card
+                const saldo = dados.saldoGeral || 0;
+                saldoElemento.innerText = `R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                
+                saldoElemento.className = "saldo-box"; // Limpa classes antigas
+                if (saldo >= 0) {
+                    saldoElemento.classList.add('saldo-positivo');
+                } else {
+                    saldoElemento.classList.add('saldo-negativo');
+                }
+
+                // 2. Atualiza a tabela de extrato
+                extratoCorpo.innerHTML = "";
+                if (!dados.historico || dados.historico.length === 0) {
+                    extratoCorpo.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #718096;">Nenhuma transação encontrada no banco.</td></tr>`;
+                    return;
+                }
+
+                dados.historico.forEach(t => {
+                    const dataFormatada = new Date(t.data).toLocaleString('pt-BR');
+                    const classeTipo = t.tipo === 'DEPÓSITO' ? 'tipo-deposito' : 'tipo-saque';
+                    const sinal = t.tipo === 'DEPÓSITO' ? '+' : '-';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${dataFormatada}</td>
+                        <td><strong>${t.cliente}</strong></td>
+                        <td class="${classeTipo}">${t.tipo}</td>
+                        <td class="${classeTipo}">${sinal} R$ ${t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                    `;
+                    extratoCorpo.appendChild(tr);
+                });
+
+            } catch (erro) {
+                extratoCorpo.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #e53e3e; font-weight: bold;">Erro de conexão com a API Bancária.</td></tr>`;
+                console.error("Erro na requisição:", erro);
+            }
+        }
+
+        // Evento de envio do formulário de Depósito/Saque
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const cliente = document.getElementById('cliente').value;
+            const tipo = document.getElementById('tipo').value;
+            const valor = document.getElementById('valor').value;
+
+            try {
+                const resposta = await fetch(`${API_URL}/api/transacoes`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ cliente, tipo, valor })
+                });
+
+                const resultado = await resposta.json();
+
+                if (resposta.ok) {
+                    document.getElementById('valor').value = ""; // Limpa apenas o campo de valor
+                    carregarDadosBancarios(); // Recarrega o extrato e o saldo na hora!
+                } else {
+                    alert(`Erro do Servidor: ${resultado.erro}`);
+                }
+            } catch (erro) {
+                alert("Falha grave de rede. O servidor não pôde ser alcançado.");
+                console.error("Erro no envio:", erro);
+            }
+        });
+
+        // Inicializa buscando as transações existentes ao abrir a página
+        carregarDadosBancarios();
+    </script>
+</body>
+</html>
