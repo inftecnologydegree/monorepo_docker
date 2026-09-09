@@ -13,7 +13,7 @@ O projeto é dividido em três camadas independentes e isoladas:
 
 ---
 
-## 🐋 Por que Docker neste projeto? (Vantagens Práticas)
+## 🐋 Utilização do Docker neste projeto (Vantagens Práticas)
 
 A inclusão do Docker no Backend trouxe melhorias estratégicas para o ciclo de vida da aplicação:
 
