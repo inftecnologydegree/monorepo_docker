@@ -29,24 +29,35 @@
         th { background-color: #edf2f7; font-weight: 600; }
         .tipo-deposito { color: #2f855a; font-weight: bold; }
         .tipo-saque { color: #e53e3e; font-weight: bold; }
+        .logo{
+     align-items: center;
+  
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    font-size: calc(10px + 2vmin);
+    justify-content: center;
+}
         .fa-brands {
-                font-size: 30px;
-                margin: 10px;
-                padding: 20px;
-                text-align: center;
-                text-decoration: none;
-                width: 50px;
-            }
-        .fa-linkedin, .fa-reddit, .fa-x-twitter {
-             background: #55acee;
-            color: #fff;
-            }
+        font-size: 30px;
+        margin: 10px;
+        padding: 20px;
+        text-align: center;
+        text-decoration: none;
+        width: 50px !important;
+        }
+    .fa-linkedin, .fa-reddit, .fa-x-twitter {
+    background: #55acee;
+    color: #fff;
+}
+
+
     </style>
 </head>
 <body>
 
     <h1 style="text-align: center; margin-bottom: 30px;">🏦 Sovereign Bank <span style="font-size: 16px; color: #718096;">| DevOps Project 1</span></h1>
-<a target="_blank" href="https://www.linkedin.com/in/samuel-samuel-pereira-de-souza-662523397/" class="fa-brands fa-linkedin" rel="noopener noreferrer"> </a>
+
     <div class="container">
         
         <!-- Bloco 1: Resumo da Conta -->
@@ -61,7 +72,7 @@
             <h2>Nova Operação</h2>
             <form id="formTransacao">
                 <label for="cliente">Nome do Cliente</label>
-                <input type="text" id="cliente" placeholder="Nome" required>
+                <input type="text" id="cliente" placeholder="  Nome  " required>
 
                 <label for="tipo">Tipo de Operação</label>
                 <select id="tipo" required>
@@ -95,9 +106,10 @@
                 </tbody>
             </table>
         </div>
-
     </div>
-
+         <div class="logo">
+        <a target="_blank" href="https://www.linkedin.com/in/samuel-samuel-pereira-de-souza-662523397/" class="fa-brands fa-linkedin" rel="noopener noreferrer"> </a>
+       </div>
     <script>
         
         // DETECÇÃO AUTOMÁTICA DE AMBIENTE (PRODUÇÃO VS LOCAL)
